@@ -1,0 +1,17 @@
+{
+  "name": "Solarium",
+  "short_name": "Solarium",
+  "description": "Monitoriza tu exposición solar diaria",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/sun-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
