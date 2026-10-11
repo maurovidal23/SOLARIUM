@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react';
 import { getSessionsForMonth } from '../../db/sessions';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { getIntensityColor } from '../../utils/format';
 
 export default function MonthlyHeatmap() {
   const [data, setData] = useState([]);
-  const [month, setMonth] = useState(new Date());
+  const [month] = useState(new Date());
 
   useEffect(() => {
     async function load() {
@@ -17,8 +16,8 @@ export default function MonthlyHeatmap() {
 
       const dayData = days.map((day) => {
         const dayStr = day.toISOString().split('T')[0];
-        const daySessions = sessions.filter((s) => s.date === dayStr);
-        const totalMinutes = daySessions.reduce((sum, s) => sum + (s.duration || 0), 0) / 60;
+        const daySessions = sessions.filter((session) => session.date === dayStr);
+        const totalMinutes = daySessions.reduce((sum, session) => sum + (session.duration || 0), 0) / 60;
 
         let level = 'none';
         if (totalMinutes > 60) level = 'high';
@@ -30,6 +29,7 @@ export default function MonthlyHeatmap() {
 
       setData(dayData);
     }
+
     load();
   }, [month]);
 
@@ -43,36 +43,34 @@ export default function MonthlyHeatmap() {
   const firstDayOffset = data.length > 0 ? (data[0].dayOfWeek + 6) % 7 : 0;
 
   return (
-    <div className="bg-slate-800/50 rounded-xl p-4">
-      <h3 className="text-sm font-semibold text-slate-300 mb-4">
-        {format(month, 'MMMM yyyy', { locale: es })}
-      </h3>
+    <div className="rounded-xl bg-slate-800/50 p-4">
+      <h3 className="mb-4 text-sm font-semibold text-slate-300">{format(month, 'MMMM yyyy', { locale: es })}</h3>
 
       <div className="grid grid-cols-7 gap-1 text-center">
-        {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((d) => (
-          <div key={d} className="text-[10px] text-slate-500 pb-1">{d}</div>
+        {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((day) => (
+          <div key={day} className="pb-1 text-[10px] text-slate-500">{day}</div>
         ))}
 
-        {Array.from({ length: firstDayOffset }).map((_, i) => (
-          <div key={`empty-${i}`} />
+        {Array.from({ length: firstDayOffset }).map((_, index) => (
+          <div key={`empty-${index}`} />
         ))}
 
-        {data.map((d) => (
+        {data.map((day) => (
           <div
-            key={d.date}
-            className="aspect-square rounded-sm flex items-center justify-center text-[10px] text-slate-400"
-            style={{ backgroundColor: levelColors[d.level] }}
-            title={`${d.date}: ${Math.round(d.totalMinutes)}m`}
+            key={day.date}
+            className="flex aspect-square items-center justify-center rounded-sm text-[10px] text-slate-400"
+            style={{ backgroundColor: levelColors[day.level] }}
+            title={`${day.date}: ${Math.round(day.totalMinutes)}m`}
           >
-            {d.day}
+            {day.day}
           </div>
         ))}
       </div>
 
-      <div className="flex items-center justify-center gap-2 mt-3 text-[10px] text-slate-500">
+      <div className="mt-3 flex items-center justify-center gap-2 text-[10px] text-slate-500">
         <span>Menos</span>
         {Object.entries(levelColors).map(([level, color]) => (
-          <div key={level} className="w-3 h-3 rounded-sm" style={{ backgroundColor: color }} />
+          <div key={level} className="h-3 w-3 rounded-sm" style={{ backgroundColor: color }} />
         ))}
         <span>Más</span>
       </div>

@@ -1,120 +1,143 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
+import { Check, RotateCcw, Sparkles, X } from 'lucide-react';
 import BodyFront from './BodyFront';
 import BodyBack from './BodyBack';
-import BODY_ZONE_LABELS, { PRESETS } from './bodyZones';
+import BODY_ZONE_LABELS, { PRESETS, ZONE_GROUPS } from './bodyZones';
 
 export default function BodySelector({ selectedZones, onChangeZones }) {
-  const [view, setView] = useState('front');
+  const selectedSet = useMemo(() => new Set(selectedZones), [selectedZones]);
+  const selectedPercent = Math.round((selectedZones.length / Object.keys(BODY_ZONE_LABELS).length) * 100);
 
   const handleToggleZone = (zone) => {
-    if (selectedZones.includes(zone)) {
+    if (selectedSet.has(zone)) {
       onChangeZones(selectedZones.filter((z) => z !== zone));
-    } else {
-      onChangeZones([...selectedZones, zone]);
+      return;
     }
+    onChangeZones([...selectedZones, zone]);
   };
 
-  const applyPreset = (zones) => {
-    onChangeZones([...zones]);
+  const applyPreset = (zones) => onChangeZones([...zones]);
+  const clearAll = () => onChangeZones([]);
+
+  const toggleGroup = (zones) => {
+    const allSelected = zones.every((zone) => selectedSet.has(zone));
+    if (allSelected) {
+      onChangeZones(selectedZones.filter((zone) => !zones.includes(zone)));
+      return;
+    }
+    onChangeZones(Array.from(new Set([...selectedZones, ...zones])));
   };
 
-  const clearAll = () => {
-    onChangeZones([]);
-  };
-
-  // Check if a preset matches current selection
   const isPresetActive = (preset) => {
     if (selectedZones.length !== preset.zones.length) return false;
-    return preset.zones.every((z) => selectedZones.includes(z));
+    return preset.zones.every((zone) => selectedSet.has(zone));
   };
 
   return (
-    <div className="space-y-3">
-      {/* Presets */}
-      <div className="flex flex-wrap gap-1.5 justify-center">
-        {PRESETS.map((preset) => (
-          <button
-            key={preset.key}
-            onClick={() => applyPreset(preset.zones)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              isPresetActive(preset)
-                ? 'bg-amber-500/25 text-amber-300 border border-amber-500/40 shadow-sm shadow-amber-500/10'
-                : 'bg-slate-700/40 text-slate-400 border border-slate-600/30 hover:bg-slate-700/60'
-            }`}
-            title={preset.desc}
-          >
-            {preset.label}
-          </button>
-        ))}
-        {selectedZones.length > 0 && (
-          <button
-            onClick={clearAll}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700/40 text-slate-500 border border-slate-600/30 hover:text-red-400 hover:border-red-500/30 transition-all"
-          >
-            ✕ Limpiar
-          </button>
-        )}
-      </div>
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/30 p-3">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300/80">Mapa corporal</div>
+            <div className="text-[11px] text-slate-400">Selecciona solo las zonas que recibieron sol directo.</div>
+          </div>
+          <div className="rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-200">
+            {selectedPercent}%
+          </div>
+        </div>
 
-      {/* View toggle */}
-      <div className="flex items-center justify-center gap-2">
-        <button
-          onClick={() => setView('front')}
-          className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
-            view === 'front'
-              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-              : 'bg-slate-700/50 text-slate-400 border border-slate-600/30'
-          }`}
-        >
-          Frontal
-        </button>
-        <button
-          onClick={() => setView('back')}
-          className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
-            view === 'back'
-              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-              : 'bg-slate-700/50 text-slate-400 border border-slate-600/30'
-          }`}
-        >
-          Espalda
-        </button>
-      </div>
+        {/* Both views are shown together so all 13 zones are reachable at once. */}
+        <div className="grid grid-cols-2 items-start gap-3">
+          <figure className="m-0">
+            <div className="mx-auto w-full rounded-[26px] border border-slate-700/60 bg-slate-950/45 px-3 py-3">
+              <BodyFront selectedZones={selectedZones} onToggleZone={handleToggleZone} />
+            </div>
+            <figcaption className="mt-2 text-center text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              Frontal
+            </figcaption>
+          </figure>
 
-      {/* Body SVG */}
-      <div className="flex justify-center">
-        <div className="w-48">
-          {view === 'front' ? (
-            <BodyFront selectedZones={selectedZones} onToggleZone={handleToggleZone} />
-          ) : (
-            <BodyBack selectedZones={selectedZones} onToggleZone={handleToggleZone} />
+          <figure className="m-0">
+            <div className="mx-auto w-full rounded-[26px] border border-slate-700/60 bg-slate-950/45 px-3 py-3">
+              <BodyBack selectedZones={selectedZones} onToggleZone={handleToggleZone} />
+            </div>
+            <figcaption className="mt-2 text-center text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              Espalda
+            </figcaption>
+          </figure>
+        </div>
+
+        <div className="mt-3 grid gap-2">
+          {ZONE_GROUPS.map((group) => {
+            const activeCount = group.zones.filter((zone) => selectedSet.has(zone)).length;
+            const allSelected = activeCount === group.zones.length;
+            return (
+              <button
+                key={group.key}
+                type="button"
+                onClick={() => toggleGroup(group.zones)}
+                className={`w-full rounded-xl border px-3 py-2 text-left transition-all ${
+                  allSelected
+                    ? 'border-amber-400/50 bg-amber-400/15 text-amber-100'
+                    : 'border-slate-700/70 bg-slate-900/50 text-slate-300 hover:border-slate-500'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-semibold">{group.label}</span>
+                  {allSelected ? <Check size={14} /> : <span className="text-[10px] text-slate-500">{activeCount}/{group.zones.length}</span>}
+                </div>
+              </button>
+            );
+          })}
+          {selectedZones.length > 0 && (
+            <button
+              type="button"
+              onClick={clearAll}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-700/70 px-3 py-2 text-xs font-semibold text-slate-400 transition-colors hover:border-red-400/40 hover:text-red-300"
+            >
+              <RotateCcw size={14} />
+              Limpiar mapa
+            </button>
           )}
         </div>
       </div>
 
-      {/* Selected zones pills */}
+      <div className="grid grid-cols-2 gap-2">
+        {PRESETS.map((preset) => (
+          <button
+            key={preset.key}
+            type="button"
+            onClick={() => applyPreset(preset.zones)}
+            className={`rounded-xl border p-3 text-left transition-all ${
+              isPresetActive(preset)
+                ? 'border-amber-400/60 bg-amber-400/15 text-amber-100'
+                : 'border-slate-700/70 bg-slate-800/50 text-slate-300 hover:border-slate-500'
+            }`}
+          >
+            <div className="flex items-center gap-2 text-xs font-semibold">
+              {preset.key === 'full' && <Sparkles size={14} />}
+              {preset.label}
+            </div>
+            <div className="mt-1 text-[10px] leading-snug text-slate-500">{preset.desc}</div>
+          </button>
+        ))}
+      </div>
+
       {selectedZones.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 justify-center">
+        <div className="flex flex-wrap gap-1.5">
           {selectedZones.map((zone) => (
             <span
               key={zone}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/20 text-amber-400 border border-amber-500/20"
+              className="inline-flex items-center gap-1 rounded-full border border-amber-400/25 bg-amber-400/10 px-2 py-1 text-[10px] font-medium text-amber-200"
             >
               {BODY_ZONE_LABELS[zone] || zone}
-              <button
-                onClick={() => handleToggleZone(zone)}
-                className="ml-0.5 hover:text-amber-200"
-              >
-                ✕
+              <button type="button" aria-label={`Quitar ${BODY_ZONE_LABELS[zone] || zone}`} onClick={() => handleToggleZone(zone)} className="-m-0.5 p-0.5 text-amber-200/70 transition-colors hover:text-white">
+                <X size={11} />
               </button>
             </span>
           ))}
         </div>
       )}
-
-      {/* Count */}
-      <div className="text-center text-[10px] text-slate-500">
-        {selectedZones.length} de {Object.keys(BODY_ZONE_LABELS).length} zonas seleccionadas
-      </div>
     </div>
   );
 }

@@ -1,18 +1,18 @@
 import { create } from 'zustand';
-import { addSession, updateSession, getSessionsForDay } from '../db/sessions';
+import { addSession, getSessionsForDay } from '../db/sessions';
+
+// Reset invalidates reads that may still hold a snapshot of deleted sessions.
+let exposureGeneration = 0;
 
 export const useExposureStore = create((set, get) => ({
-  // Current session state
   isTracking: false,
   currentSession: null,
   elapsedSeconds: 0,
   intervalId: null,
 
-  // Today's data
   todaySessions: [],
   todayTotal: 0,
 
-  // Intensity modal
   showIntensityModal: false,
   pendingSession: null,
 
@@ -48,19 +48,17 @@ export const useExposureStore = create((set, get) => ({
     const now = Date.now();
     const duration = Math.floor((now - currentSession.start_time) / 1000);
 
-    const pendingSession = {
-      ...currentSession,
-      end_time: now,
-      duration,
-    };
-
     set({
       isTracking: false,
       currentSession: null,
       elapsedSeconds: 0,
       intervalId: null,
       showIntensityModal: true,
-      pendingSession,
+      pendingSession: {
+        ...currentSession,
+        end_time: now,
+        duration,
+      },
     });
   },
 
@@ -68,12 +66,11 @@ export const useExposureStore = create((set, get) => ({
     const { pendingSession } = get();
     if (!pendingSession) return;
 
-    const session = {
+    await addSession({
       ...pendingSession,
       intensity_level: intensity,
       body_parts: bodyParts || [],
-    };
-    await addSession(session);
+    });
 
     set({ showIntensityModal: false, pendingSession: null });
     get().loadTodaySessions();
@@ -89,9 +86,30 @@ export const useExposureStore = create((set, get) => ({
   },
 
   loadTodaySessions: async () => {
+    const generation = exposureGeneration;
     const today = new Date().toISOString().split('T')[0];
     const sessions = await getSessionsForDay(today);
-    const todayTotal = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+    if (generation !== exposureGeneration) return;
+    const todayTotal = sessions.reduce((sum, session) => sum + (session.duration || 0), 0);
     set({ todaySessions: sessions, todayTotal });
+  },
+
+  // Atomically clears every piece of live exposure state: the running timer, the
+  // in-flight session, the pending intensity modal, and today's cached sessions.
+  // Used by "Borrar todo" so deleted data cannot reappear or be re-saved.
+  resetExposure: () => {
+    exposureGeneration += 1;
+    const { intervalId } = get();
+    if (intervalId) clearInterval(intervalId);
+    set({
+      isTracking: false,
+      currentSession: null,
+      elapsedSeconds: 0,
+      intervalId: null,
+      showIntensityModal: false,
+      pendingSession: null,
+      todaySessions: [],
+      todayTotal: 0,
+    });
   },
 }));

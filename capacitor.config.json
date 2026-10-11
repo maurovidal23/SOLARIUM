@@ -1,0 +1,12 @@
+{
+  "appId": "com.maurovidal.solarium",
+  "appName": "Solarium",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "scheme": "Solarium"
+  }
+}

@@ -1,13 +1,9 @@
 import { db } from './index';
-import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 
 export async function addSession(session) {
   const date = new Date(session.start_time).toISOString().split('T')[0];
   return db.sessions.add({ ...session, date });
-}
-
-export async function updateSession(id, changes) {
-  return db.sessions.update(id, changes);
 }
 
 export async function getSessionsForDay(date) {
@@ -46,4 +42,8 @@ export async function deleteSession(id) {
 
 export async function getAllSessions() {
   return db.sessions.toArray();
+}
+
+export async function clearAllSessions() {
+  return db.sessions.clear();
 }

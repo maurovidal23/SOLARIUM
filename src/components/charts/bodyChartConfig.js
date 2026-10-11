@@ -1,0 +1,15 @@
+export const ZONE_COLORS = {
+  face: '#fbbf24',
+  neck: '#f59e0b',
+  shoulders: '#d97706',
+  chest: '#f97316',
+  abdomen: '#ea580c',
+  arms: '#fb923c',
+  forearms: '#fdba74',
+  hands: '#fde68a',
+  thighs: '#a16207',
+  shins: '#ca8a04',
+  feet: '#eab308',
+  upper_back: '#b45309',
+  lower_back: '#92400e',
+};

@@ -1,14 +1,12 @@
+import BODY_ZONE_LABELS from '../components/body/bodyZones';
+
 export function formatDuration(totalSeconds) {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
 
-  if (hours > 0) {
-    return `${hours}h ${String(minutes).padStart(2, '0')}m`;
-  }
-  if (minutes > 0) {
-    return `${minutes}m ${String(seconds).padStart(2, '0')}s`;
-  }
+  if (hours > 0) return `${hours}h ${String(minutes).padStart(2, '0')}m`;
+  if (minutes > 0) return `${minutes}m ${String(seconds).padStart(2, '0')}s`;
   return `${seconds}s`;
 }
 
@@ -37,23 +35,7 @@ export function getIntensityLabel(level) {
   }
 }
 
-const BODY_PART_SHORT = {
-  face: 'Cara',
-  neck: 'Cuello',
-  shoulders: 'Hombros',
-  chest: 'Pecho',
-  abdomen: 'Abdomen',
-  arms: 'Brazos',
-  forearms: 'Antebrazos',
-  hands: 'Manos',
-  thighs: 'Muslos',
-  shins: 'Piernas',
-  feet: 'Pies',
-  upper_back: 'Espalda↑',
-  lower_back: 'Espalda↓',
-};
-
 export function formatBodyParts(parts) {
   if (!parts || parts.length === 0) return '';
-  return parts.map((p) => BODY_PART_SHORT[p] || p).join(', ');
+  return parts.map((part) => BODY_ZONE_LABELS[part] || part).join(', ');
 }

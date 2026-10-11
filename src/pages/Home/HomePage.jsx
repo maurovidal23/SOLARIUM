@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Sun } from 'lucide-react';
 import { useExposureStore } from '../../store/exposureStore';
 import ExposureButton from '../../components/exposure/ExposureButton';
 import DailySummary from '../../components/exposure/DailySummary';
@@ -7,19 +8,20 @@ import SessionList from '../../components/exposure/SessionList';
 import IntensityModal from '../../components/exposure/IntensityModal';
 
 export default function HomePage() {
-  const loadTodaySessions = useExposureStore((s) => s.loadTodaySessions);
+  const loadTodaySessions = useExposureStore((state) => state.loadTodaySessions);
 
   useEffect(() => {
     loadTodaySessions();
   }, [loadTodaySessions]);
 
   return (
-    <div className="flex-1 px-4 pt-6 pb-24 max-w-lg mx-auto w-full space-y-6">
+    <div className="mx-auto flex-1 space-y-6 px-4 pb-24 pt-6 w-full max-w-lg">
       <header className="text-center">
-        <h1 className="text-2xl font-bold">
-          <span className="text-amber-400">☀️</span> Solarium
+        <h1 className="flex items-center justify-center gap-2 text-2xl font-bold">
+          <Sun size={24} className="text-amber-300" />
+          Solarium
         </h1>
-        <p className="text-slate-500 text-xs mt-1">Monitoriza tu exposición solar</p>
+        <p className="mt-1 text-xs text-slate-500">Monitoriza tu exposición solar</p>
       </header>
 
       <ExposureButton />
